@@ -2,7 +2,7 @@
 title Atualizando Dashboard Gestao Etanol - Clealco
 echo.
 echo  Instalando dependencias (se necessario)...
-pip install msal requests openpyxl -q
+pip install selenium openpyxl -q
 echo.
 echo  Atualizando dashboard...
 echo.

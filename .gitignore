@@ -1,0 +1,6 @@
+*.xlsx
+*.xls
+_chrome_profile/
+_deploy/
+*.tmp
+*.crdownload

@@ -49,13 +49,17 @@ REPO_DIR = PROJECT_DIR
 def publish_github():
     """Faz commit e push do HTML atualizado para o GitHub."""
     git = shutil.which("git")
-    print(f"  → Git encontrado em: {git}")
     if not git:
         print("⚠ Git não encontrado — pulei a publicação online.")
         print("  Instale o Git (git-scm.com) para habilitar a publicação automática.")
         return
 
-    print(f"  → Pasta do repositório: {REPO_DIR}")
+    # Garante .gitignore para não subir Excel e outros arquivos desnecessários
+    gitignore_path = os.path.join(REPO_DIR, ".gitignore")
+    gitignore_content = "*.xlsx\n*.xls\n_chrome_profile/\n_deploy/\n.token_cache.bin\n*.tmp\n*.crdownload\n"
+    if not os.path.exists(gitignore_path):
+        with open(gitignore_path, "w") as f:
+            f.write(gitignore_content)
 
     # Garante que o HTML publicado se chama index.html (padrão do GitHub Pages)
     index_path = os.path.join(REPO_DIR, "index.html")
@@ -65,31 +69,30 @@ def publish_github():
     def run(args):
         r = subprocess.run([git] + args, cwd=REPO_DIR,
                             capture_output=True, text=True, shell=False)
-        print(f"  → git {' '.join(args)}")
-        print(f"    stdout: {r.stdout.strip()[:300]}")
-        print(f"    stderr: {r.stderr.strip()[:300]}")
-        print(f"    returncode: {r.returncode}")
         return r
 
     # Verifica se já é um repositório git
     check = run(["status"])
     if check.returncode != 0:
         print("⚠ Esta pasta não é um repositório Git ainda.")
-        print("  Configure o repositório uma vez seguindo as instruções no início do script.")
         return
 
-    run(["add", "index.html"])
+    run(["add", "index.html", ".gitignore"])
     commit = run(["commit", "-m", "Atualização automática dos dados"])
+
     if "nothing to commit" in (commit.stdout + commit.stderr):
         print("ℹ Nenhuma mudança nos dados desde a última publicação.")
         return
 
+    if commit.returncode != 0:
+        print(f"⚠ Erro no commit:\n{commit.stderr[-400:]}")
+        return
+
     push = run(["push"])
-    output = push.stdout + push.stderr
     if push.returncode == 0:
         print("✔ Publicado no GitHub com sucesso!")
     else:
-        print(f"⚠ Erro ao publicar:\n{output[-800:]}")
+        print(f"⚠ Erro ao publicar:\n{push.stderr[-400:]}")
 
 
 
